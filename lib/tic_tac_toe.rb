@@ -33,59 +33,43 @@ class TicTacToe
     @board[cell] !=" "
   end 
 
-  def valid_move?(move)
-    !position_taken?(move) && [*0..8].include?(move) 
+  def valid_move?(index)
+    !position_taken?(index) && index.between?(0,8) 
   end 
 
   def turn_count
-		@board.reduce(0) { |acc, cell| cell == " " ? acc : acc + 1 }
+		@board.count{|sq| sq != " " }
   end
   
 	def current_player
-		turn_count % 2 == 0 ? "X" : "O"
+		turn_count.even? ? "X" : "O"
   end
   
 	def turn
-		player_move = ""
-		loop do 
-		  player_move = input_to_index(gets.chomp)
-		  break if valid_move?(player_move)
-		end
-		move(player_move, current_player)
-		display_board
+    puts "Please enter a number (1-9):"
+    user_input = gets.strip
+    index = input_to_index(user_input)
+    if valid_move?(index)
+      token = current_player
+      move(index, token)
+    else
+      turn
+    end
+    display_board
   end
   
 	def won?
-		p1_wins = false
-		p2_wins = false
-		winning_combo = nil
-		WIN_COMBINATIONS.each do |combo|
-			p1_wins = (combo - p1_moves).empty? || p1_wins
-			p2_wins = (combo - p2_moves).empty? || p2_wins
-			winning_combo ||= combo if p1_wins || p2_wins
-		end
-		(p1_wins || p2_wins) ? winning_combo : false
+    WIN_COMBINATIONS.any? do |combo|
+      if position_taken?(combo[0]) && @board[combo[0]] == @board[combo[1]] && @board[combo[1]] == @board[combo[2]]
+        return combo
+      end
+    end
   end
   
 	def full?
-		([*0..8] - (p1_moves + p2_moves)).empty?
+		@board.all?{|sq| sq != " "}
   end
-  
-	def p1_moves
-		p1_moves = []
-		@board.each_with_index do |cell, i|
-			cell == "X" && p1_moves << i
-		end
-		p1_moves
-  end
-  
-	def p2_moves
-		p2_moves = []
-		@board.each_with_index do |cell, i|
-			cell == "O" && p2_moves << i
-		end
-		p2_moves
-  end
+
   
 	def draw?
 		full? && !won?
